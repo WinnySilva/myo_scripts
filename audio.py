@@ -16,7 +16,6 @@ tones1 = {
         'F#': 739,
         'G': 783,
         'G#': 830,
-        
         'a': 880,
         'a#': 932,
         'b': 987,
@@ -99,16 +98,19 @@ def tocar(BitR=1600,Freq=261.63, Len=1.2232):
 
 import math
 import struct
-import pyaudio
+import pyaudio, random
 
 def play_tone(frequency, amplitude, duration, fs, stream):
     N = int(fs / frequency)
     T = int(frequency * duration)  # repeat for T cycles
     dt = 1.0 / fs
     # 1 cycle
-    tone = (amplitude * math.sin(2 * math.pi * frequency * n * dt)
-            for n in xrange(N))
-     
+   # tone = (amplitude * math.sin(2 * math.pi * frequency * n * dt)%n
+    #        for n in xrange(1,N))
+    tone = (amplitude*
+    (2*math.sin(math.pi * frequency * n*dt )
+    /float(math.sqrt( (n*5/3.0) ) ) ) 
+    for n in range(1,N))
     #tone = (amplitude * math.sin(880 * math.pi * (frequency * n * dt))
     #    for n in xrange(N))
     # todo: get the format from the stream; this assumes Float32
@@ -168,7 +170,7 @@ tones=[
 
 
 
-fs = 48000
+fs = 99999
 p = pyaudio.PyAudio()
 stream = p.open(
     format=pyaudio.paFloat32,
@@ -176,22 +178,62 @@ stream = p.open(
     rate=fs,
     output=True)
 #for ton in escala1:
-#    play_tone(ton, 1, 0.75, fs, stream)
+
+escala_menor=[
+["C","D","D#","F","G","G#","B"],
+["C#","D#","E","F#","G#","A","C"],
+["D","E","F","G","A","A#","C#"],
+["D#","F","F#","G#","A#","B","D"],
+["E","F#","G","A","B","C","D#"],
+["F","G","G#","A#","C","C#","E"],
+["F#","G#","A","B","C#","D","F"],
+["G","A","A#","C","D","D#","F#"],
+["G#","A#","B","C#","D#","E","G"],
+["A","B","C","D","E","F","G#"],
+["A#","C","C#","D#","F","F#","A"],
+["B","C#","D","E","F#","G","A#"]
+]
+escala_pentatonica_maior=[
+["C","D","E","G","A"],
+["C#","D#","F","G#","A#"],
+["D","E","F#","A","B"],
+["D#","F","G","A#","C"],
+["E","F#","G#","B","C#"],
+["F","G","A","C","D"],
+["F#","G#","A#","C#","D"],
+["G","A","B","D","E"],
+["G#","A#","C","D#","F"],
+["A","B","C#","E","F#"],
+["A#","C","D","F","G"],
+["B","C#","D#","F#","G#"]
+]
+
+a=1
+for i in range(0,5):
+    t= float(random.randint(0, 255*2)/255.0)
+    play_tone(tones1[escala_pentatonica_maior[0][i]], a,t, fs, stream)
+
+    
+#for i in range(0,5):
+ #   play_tone(tones1[escala_pentatonica_maior[9][i]], a,t, fs, stream)
+
+#for i in range(0,5):
+ #   play_tone(tones1[escala_pentatonica_maior[6][i]], a,t, fs, stream)
 
 
-matriz = [[0 for x in range(28)] for y in range(28)]
-aux1=0;
-for i in range(14):
-    aux2=aux1;
-    aux1= (aux1+1)%14
-    print "[",
-    for j in range(14):
-        matriz[i][j]= escala1[aux2]
+#matriz = [[0 for x in range(28)] for y in range(28)]
+#aux1=0;
+#for i in range(14):
+#    aux2=aux1;
+#    aux1= (aux1+1)%14
+#    print "[",
+#    for j in range(14):
+#        matriz[i][j]= escala1[aux2]
         #play_tone(matriz[i][j], 1, 0.75, fs, stream)
-        print matriz[i][j],
-        print " ,",
-        aux2= (aux2+1)%14
-    print "],"
+#        print matriz[i][j],
+#        print " ,",
+#        aux2= (aux2+1)%14
+#    print "],"
 
 stream.close()
 p.terminate()

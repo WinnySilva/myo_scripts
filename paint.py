@@ -90,6 +90,14 @@ escala_pentatonica_maior={
 "A#":["A#","C","D","F","G"],
 "B":["B","C#","D#","F#","G#"]
 }
+tones3 = [ 440, 493,
+         523,
+         587,
+         659,
+        698,
+        783
+]
+
 
 global cont_escala
 cont_escala= 0
@@ -97,7 +105,52 @@ global escala_atual
 escala_atual= []
 global cor
 global lock
+global posAtual
+global nota
+nota=-1
+posAtual=(0,0)
+global desenhando
+desenhando = False
 lock =  threading.Lock()
+fs = 5000
+p = pyaudio.PyAudio()
+stream = p.open(format=pyaudio.paFloat32,channels=1,rate=fs,output=True)
+
+def daemon(w,j):
+    global desenhando, cont_escala,escala_atual
+    a = 20
+    t = 0.5
+    aux=2
+    global posAtual
+    global stream,fs,desenhando
+    global nota
+    
+    while(1):
+        
+        if nota > -1:            
+            if (desenhando == True):
+                a=( posAtual[0]*1.0/w*1.0 ) *2
+                          
+                play_tone(tones3[nota], a, 0.1, fs, stream)
+                print "tocar desenhando "
+                print nota
+                
+            #else:
+           #     nota =0  
+       # lock.release( 
+    
+
+def notas_Div(height):
+    print height
+    n_divs = 7
+    divs = height/n_divs
+    areas =[]
+    area = 0;
+    for i in range(0,n_divs):
+        areas.append(area)
+        area = area+divs
+    areas.append(height)    
+    return areas;
 def play_tone(frequency, amplitude, duration, fs, stream):
     N = int(fs / frequency)
     T = int(frequency * duration)  # repeat for T cycles
@@ -107,9 +160,10 @@ def play_tone(frequency, amplitude, duration, fs, stream):
     tone = (amplitude * math.sin(2 * math.pi * frequency * n * dt)
             for n in xrange(N))
     # todo: get the format from the stream; this assumes Float32
-    data = ''.join(struct.pack('f', samp) for samp in tone)
+    data = ''.join(struct.pack('f', samp) for samp in tone)    
     for n in xrange(T):
         stream.write(data)
+   
         
 def desenhar(srf, inicio, fim, raio=1):
     '''
@@ -131,45 +185,31 @@ def desenhar(srf, inicio, fim, raio=1):
    
     cor= novaCor    
     #thread.start_new_thread( tocar, (inicio,fim ) )
-    tocar(inicio,fim )
+    #tocar(inicio,fim )
   
-def tocar(inicio, fim):
-    print "playing"
-    
-    dx = fim[0]-inicio[0]
-    dy = fim[1]-inicio[1]
-    distancia = max(abs(dx), abs(dy))
-    toneInit = tones[inicio[0]%14 ][inicio[1]%14]
-    toneFim =  tones[fim[0]%14 ][fim[1]%14]
-    #for i in range(0,(distancia/10) ):
-    #    play_tone((toneInit *(float(alfa)/distancia) + toneFim * (1-float(alfa)/distancia) ), 1, 0.7, fs, stream);
-    #    play_tone( (tones[int(inicio[0]+float(i)/distancia*dx)%14][int(inicio[1]+float(i)/distancia*dy)%14]) , 1, 0.09, fs, stream)    
-    a = float(random.randint(0, distancia))+0.2
-    t = 0.5
-    
-    #t = 0.5 * (1/distancia)
-    lock.acquire()
-    #for i in (0,4):
-    #    print escal[i],t
-        #t=float(random.randint(0, distancia))+0.2
-    global cont_escala
-    if cont_escala==0:
-        global escala_atual
-        escala_atual = escala_pentatonica_maior[tones_[inicio[0]%14][inicio[1]%14]]
+
+def partitura(height, posY):
+    divs = notas_Div(height)
+    global nota
+    i=0
+
+    while posY>divs[i]:
+        print divs[i],posY
+        i+=1
         
-    play_tone( tones1[escala_atual[cont_escala]] , a, t, fs, stream)
-    print cont_escala,escala_atual[cont_escala]
-    cont_escala = (cont_escala+1)%5
-    lock.release() 
-    #stream.close()
-    #p.terminate()
+    nota =i-1
+    print " nota ",nota    
+        
 def main():
-    
-    tela = pygame.display.set_mode((800,600))
-    cores = [(255, 60, 60), (0, 220, 0), (30, 60, 255), (240, 0, 130), (230, 220, 50)]
+    w = 800
+    h=600
+    pygame.init()
+    tela = pygame.display.set_mode((w,h))
+    pygame.display.set_caption('Aquarela Musical')
+    tela.fill([0, 0, 0])
     borracha = (0, 0 ,0)
     usando_borracha = False
-
+    global desenhando
     desenhando = False
     last_pos = (0, 0)
     global cor
@@ -177,13 +217,28 @@ def main():
     raio_desenho = 10
     raio_borracha = 20
     raio = 10
-
+    
+    clave = pygame.image.load('path3.png')
+    clave = pygame.transform.scale(clave, (100, h))
+    clave_quad = pygame.draw.rect(tela, (0,0,0),(0,0,10,10) )
+    
+    linhas = pygame.image.load('g4518.png')
+    linhas = pygame.transform.scale(linhas, (w, h))
+    linhas_quad = pygame.draw.rect(tela, (0,0,0),(0,0,w,h) )
+    
+    musica_fundo = pygame.mixer.music.load('OdetoJoy_Beethoven.mp3')
+    pygame.mixer.music.play(1,0)
+    lock.acquire()
+    thread.start_new_thread( daemon, (w,0) )
+    global posAtual
     try:
         while True:
+            
             # um handler para qualquer evento do pygame 
             e = pygame.event.wait()
+            
             # debug dos eventos capturados
-            print(e)
+    #        print(e)
        	    # se o tipo do evento de uma tecla pressionada
             if e.type == pygame.KEYDOWN:
                 if e.key == 98: # letra B
@@ -196,44 +251,64 @@ def main():
                         #cor = (random.randint(0, 255),random.randint(0, 255),random.randint(0, 255))#random.choice(cores)
                         usando_borracha = False
                         raio = raio_desenho
+                        global desenhando
                     if desenhando == True:
                         #global cor
                     	pygame.draw.circle(tela, cor, last_pos, raio)
             if e.type == pygame.KEYUP:
                 #cor = (random.randint(0, 255),random.randint(0, 255),random.randint(0, 255))#random.choice(cores)
+                global desenhando
                 if desenhando == True:
                 	pygame.draw.circle(tela, cor, last_pos, raio)
             if e.type == pygame.QUIT:
                 raise StopIteration
             if e.type == pygame.MOUSEBUTTONDOWN:
+                posAtual = e.pos
                 if e.button == 3:
                     global cor
                     cor = borracha
                     usando_borracha = True
                     raio = raio_borracha
+                   
                 else:
                  #   cor = (random.randint(0, 255),random.randint(0, 255),random.randint(0, 255))#random.choice(cores)
+                    
+                    partitura(h,e.pos[1])
                     raio = raio_desenho
+                    
                 global cor
                 pygame.draw.circle(tela, cor, e.pos, raio)
+                global desenhando
                 desenhando = True
+                
             if e.type == pygame.MOUSEBUTTONUP:
+                posAtual = e.pos
                # cor = (random.randint(0, 255),random.randint(0, 255),random.randint(0, 255))#random.choice(cores)
+                global desenhando
                 desenhando = False
                 usando_borracha = False
+                nota=-1
             if e.type == pygame.MOUSEMOTION:
+                posAtual = e.pos
+                global desenhando
                 if desenhando:
                     global cor
                     pygame.draw.circle(tela, cor, e.pos, raio)
                     desenhar(tela, e.pos, last_pos,  raio)
+                    partitura(h,e.pos[1])
                 last_pos = e.pos
+                posAtual =  last_pos
+                
             pygame.display.flip()
+            tela.blit(linhas,linhas_quad)
+            tela.blit(clave,clave_quad)
+            
     except StopIteration:
         pass
     pygame.quit()
-fs = 10000
-p = pyaudio.PyAudio()
-stream = p.open(format=pyaudio.paFloat32,channels=1,rate=fs,output=True)
+
+    
+
 
 if __name__ == '__main__':
     main()

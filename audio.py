@@ -209,10 +209,11 @@ escala_pentatonica_maior=[
 ]
 
 a=1
-for i in range(0,5):
-    t= float(random.randint(0, 255*2)/255.0)
-    play_tone(tones1[escala_pentatonica_maior[0][i]], a,t, fs, stream)
-
+#for i in range(0,5):
+t= float(random.randint(0, 255*2)/255.0)
+#play_tone(tones1[escala_pentatonica_maior[0][i]], a,t, fs, stream)
+#3520.00
+play_tone(3520.00, a,5, fs, stream)
     
 #for i in range(0,5):
  #   play_tone(tones1[escala_pentatonica_maior[9][i]], a,t, fs, stream)

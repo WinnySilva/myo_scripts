@@ -218,6 +218,7 @@ def main():
     raio_borracha = 20
     raio = 10
     
+    '''
     clave = pygame.image.load('path3.png')
     clave = pygame.transform.scale(clave, (100, h))
     clave_quad = pygame.draw.rect(tela, (0,0,0),(0,0,10,10) )
@@ -227,9 +228,12 @@ def main():
     linhas_quad = pygame.draw.rect(tela, (0,0,0),(0,0,w,h) )
     
     musica_fundo = pygame.mixer.music.load('OdetoJoy_Beethoven.mp3')
+    
     pygame.mixer.music.play(1,0)
+    '''
     lock.acquire()
     thread.start_new_thread( daemon, (w,0) )
+    
     global posAtual
     try:
         while True:
@@ -300,8 +304,8 @@ def main():
                 posAtual =  last_pos
                 
             pygame.display.flip()
-            tela.blit(linhas,linhas_quad)
-            tela.blit(clave,clave_quad)
+            #tela.blit(linhas,linhas_quad)
+            #tela.blit(clave,clave_quad)
             
     except StopIteration:
         pass
